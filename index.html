@@ -38,13 +38,17 @@
     font-weight: bold;
     display: none;
   }
+  #scores {
+    margin-top: 15px;
+    font-size: 20px;
+  }
 </style>
 </head>
 <body>
 
 <h1>Click Dare Game</h1>
 
-<div class="dare-inputs">
+<div class="dare-inputs" id="dareInputs">
   <input type="text" id="p1Dare" placeholder="Player 1 dare">
   <input type="text" id="p2Dare" placeholder="Player 2 dare">
   <button onclick="startGame()">Start Game</button>
@@ -55,6 +59,10 @@
   <button id="p2Btn" onclick="clicker(2)" disabled>P2 Click</button>
 </div>
 
+<div id="scores">
+  P1: 0 | P2: 0
+</div>
+
 <div id="timer">Time: 10s</div>
 <div id="result"></div>
 
@@ -62,14 +70,17 @@
 let p1Score = 0;
 let p2Score = 0;
 let time = 10;
-let gameInterval;
 let countdown;
 
 function startGame() {
+  // Hide dare inputs
+  document.getElementById('dareInputs').style.display = 'none';
+
   p1Score = 0;
   p2Score = 0;
   time = 10;
   document.getElementById('timer').textContent = `Time: ${time}s`;
+  document.getElementById('scores').textContent = `P1: 0 | P2: 0`;
   document.getElementById('result').style.display = 'none';
 
   document.getElementById('p1Btn').disabled = false;
@@ -87,6 +98,9 @@ function startGame() {
 function clicker(player) {
   if(player === 1) p1Score++;
   else p2Score++;
+
+  // Update live scores
+  document.getElementById('scores').textContent = `P1: ${p1Score} | P2: ${p2Score}`;
 }
 
 function endGame() {
@@ -113,7 +127,7 @@ function endGame() {
   resultDiv.textContent = resultText;
   resultDiv.style.display = 'block';
 
-  // Fun animation effect
+  // Animation effect
   resultDiv.animate([
     { transform: 'scale(0.5)', opacity: 0 },
     { transform: 'scale(1.2)', opacity: 1 },
