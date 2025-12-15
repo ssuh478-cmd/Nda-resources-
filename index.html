@@ -21,6 +21,7 @@
   h1 {
     font-size: 2.5rem;
     margin-bottom: 20px;
+    animation: fadeIn 1.5s ease forwards;
   }
   .btn {
     padding: 1rem 2rem;
@@ -44,14 +45,55 @@
     margin-top: 10px;
     animation: pulse 1s infinite;
   }
+  #timer {
+    font-size: 2rem;
+    margin: 20px 0;
+  }
+
+  /* Popup styles */
+  .popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px;
+    border-radius: 20px;
+    z-index: 1000;
+    text-align: center;
+    animation: popupAnim 2s infinite alternate;
+  }
+  .popup h2 {
+    font-size: 3rem;
+    margin: 0;
+    padding: 0;
+  }
+  .popup img {
+    width: 150px;
+    margin-top: 15px;
+    border-radius: 15px;
+    animation: bounce 1s infinite alternate;
+  }
+
   @keyframes pulse {
     0% { transform: scale(1); color: #fff; }
     50% { transform: scale(1.3); color: #ff416c; }
     100% { transform: scale(1); color: #fff; }
   }
-  #timer {
-    font-size: 2rem;
-    margin: 20px 0;
+  @keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(-20px);}
+    100% { opacity: 1; transform: translateY(0);}
+  }
+  @keyframes popupAnim {
+    0% { background: #ff416c; color: #fff; }
+    25% { background: #ffb347; color: #000; }
+    50% { background: #00c6ff; color: #000; }
+    75% { background: #f7971e; color: #000; }
+    100% { background: #ff416c; color: #fff; }
+  }
+  @keyframes bounce {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+    100% { transform: translateY(0); }
   }
 </style>
 </head>
@@ -105,45 +147,32 @@ const interval = setInterval(() => {
   }
 }, 1000);
 
-// End game and show loser
+// End game and show colorful animated popup with image
 function endGame() {
   btn1.disabled = true;
   btn2.disabled = true;
   
-  let loser = '';
+  let loserText = '';
   if(count1 === count2){
-    loser = 'Both lost! Mother Fucker!';
+    loserText = 'Both lost! Mother Fucker!';
   } else if(count1 < count2){
-    loser = 'Player 1 lost! Mother Fucker!';
+    loserText = 'Player 1 lost! Mother Fucker!';
   } else {
-    loser = 'Player 2 lost! Mother Fucker!';
+    loserText = 'Player 2 lost! Mother Fucker!';
   }
 
-  // Flashing animation popup
   const popup = document.createElement('div');
-  popup.textContent = loser;
-  popup.style.position = 'fixed';
-  popup.style.top = '50%';
-  popup.style.left = '50%';
-  popup.style.transform = 'translate(-50%, -50%)';
-  popup.style.fontSize = '3rem';
-  popup.style.background = '#ff416c';
-  popup.style.padding = '20px';
-  popup.style.borderRadius = '20px';
-  popup.style.color = '#fff';
-  popup.style.zIndex = '1000';
-  popup.style.animation = 'flash 1s infinite';
-  document.body.appendChild(popup);
+  popup.classList.add('popup');
 
-  // Flash animation
-  const style = document.createElement('style');
-  style.innerHTML = `
-    @keyframes flash {
-      0%, 50%, 100% { opacity: 1; }
-      25%, 75% { opacity: 0; }
-    }
-  `;
-  document.head.appendChild(style);
+  const h2 = document.createElement('h2');
+  h2.textContent = loserText;
+  popup.appendChild(h2);
+
+  const img = document.createElement('img');
+  img.src = 'https://i.imgur.com/0Z8bO7F.png'; // sample image, replace with yours
+  popup.appendChild(img);
+
+  document.body.appendChild(popup);
 }
 </script>
 
