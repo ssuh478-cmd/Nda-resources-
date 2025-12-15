@@ -41,6 +41,12 @@
   #scores {
     margin-top: 15px;
     font-size: 20px;
+    display: none;
+  }
+  #timer {
+    font-size: 22px;
+    margin-top: 10px;
+    display: none;
   }
 </style>
 </head>
@@ -51,7 +57,7 @@
 <div class="dare-inputs" id="dareInputs">
   <input type="text" id="p1Dare" placeholder="Player 1 dare">
   <input type="text" id="p2Dare" placeholder="Player 2 dare">
-  <button onclick="startGame()">Start Game</button>
+  <button id="startBtn">Start Game</button>
 </div>
 
 <div>
@@ -59,10 +65,7 @@
   <button id="p2Btn" onclick="clicker(2)" disabled>P2 Click</button>
 </div>
 
-<div id="scores">
-  P1: 0 | P2: 0
-</div>
-
+<div id="scores">P1: 0 | P2: 0</div>
 <div id="timer">Time: 10s</div>
 <div id="result"></div>
 
@@ -72,34 +75,36 @@ let p2Score = 0;
 let time = 10;
 let countdown;
 
+document.getElementById('startBtn').addEventListener('click', startGame);
+
 function startGame() {
-  // Hide dare inputs
+  // Store dares and hide inputs
+  window.p1Dare = document.getElementById('p1Dare').value || "No dare!";
+  window.p2Dare = document.getElementById('p2Dare').value || "No dare!";
   document.getElementById('dareInputs').style.display = 'none';
 
-  p1Score = 0;
-  p2Score = 0;
-  time = 10;
-  document.getElementById('timer').textContent = `Time: ${time}s`;
+  // Show scores and timer
+  document.getElementById('scores').style.display = 'block';
+  document.getElementById('timer').style.display = 'block';
   document.getElementById('scores').textContent = `P1: 0 | P2: 0`;
+  document.getElementById('timer').textContent = `Time: ${time}s`;
   document.getElementById('result').style.display = 'none';
 
+  // Enable click buttons
   document.getElementById('p1Btn').disabled = false;
   document.getElementById('p2Btn').disabled = false;
 
+  // Start countdown
   countdown = setInterval(() => {
     time--;
     document.getElementById('timer').textContent = `Time: ${time}s`;
-    if(time <= 0) {
-      endGame();
-    }
+    if(time <= 0) endGame();
   }, 1000);
 }
 
 function clicker(player) {
   if(player === 1) p1Score++;
   else p2Score++;
-
-  // Update live scores
   document.getElementById('scores').textContent = `P1: ${p1Score} | P2: ${p2Score}`;
 }
 
@@ -108,26 +113,22 @@ function endGame() {
   document.getElementById('p1Btn').disabled = true;
   document.getElementById('p2Btn').disabled = true;
 
-  let p1Dare = document.getElementById('p1Dare').value || "No dare!";
-  let p2Dare = document.getElementById('p2Dare').value || "No dare!";
-
   let resultText = '';
   if(p1Score > p2Score) {
-    resultText = `P2 lost! You must do: "${p1Dare}"`;
+    resultText = `P2 lost! You must do: "${window.p1Dare}"`;
     document.body.style.background = "linear-gradient(135deg, #ff6a6a, #ffb347)";
   } else if(p2Score > p1Score) {
-    resultText = `P1 lost! You must do: "${p2Dare}"`;
+    resultText = `P1 lost! You must do: "${window.p2Dare}"`;
     document.body.style.background = "linear-gradient(135deg, #6a5acd, #00ffff)";
   } else {
     resultText = "It's a tie! No dares today!";
     document.body.style.background = "linear-gradient(135deg, #f0f0f0, #cccccc)";
   }
 
-  let resultDiv = document.getElementById('result');
+  const resultDiv = document.getElementById('result');
   resultDiv.textContent = resultText;
   resultDiv.style.display = 'block';
 
-  // Animation effect
   resultDiv.animate([
     { transform: 'scale(0.5)', opacity: 0 },
     { transform: 'scale(1.2)', opacity: 1 },
