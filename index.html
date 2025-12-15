@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Animated Click Counter</title>
+<title>Click Battle 10s</title>
 <style>
   body {
     margin: 0;
-    font-family: 'Arial', sans-serif;
-    background: linear-gradient(45deg, #0f2027, #203a43, #2c5364);
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
     color: #fff;
     display: flex;
     flex-direction: column;
@@ -16,16 +16,16 @@
     align-items: center;
     height: 100vh;
     overflow: hidden;
+    text-align: center;
   }
   h1 {
-    font-size: 3rem;
-    text-align: center;
-    margin-bottom: 2rem;
-    animation: fadeIn 2s ease forwards;
+    font-size: 2.5rem;
+    margin-bottom: 20px;
   }
-  #clickBtn {
+  .btn {
     padding: 1rem 2rem;
     font-size: 1.5rem;
+    margin: 10px;
     border: none;
     border-radius: 12px;
     cursor: pointer;
@@ -35,13 +35,13 @@
     position: relative;
     z-index: 1;
   }
-  #clickBtn:hover {
+  .btn:hover {
     transform: scale(1.2);
     box-shadow: 0 0 20px #ff416c;
   }
-  #count {
+  .count {
     font-size: 2rem;
-    margin-top: 1rem;
+    margin-top: 10px;
     animation: pulse 1s infinite;
   }
   @keyframes pulse {
@@ -49,105 +49,102 @@
     50% { transform: scale(1.3); color: #ff416c; }
     100% { transform: scale(1); color: #fff; }
   }
-  @keyframes fadeIn {
-    0% { opacity: 0; transform: translateY(-20px);}
-    100% { opacity: 1; transform: translateY(0);}
-  }
-  canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    pointer-events: none;
+  #timer {
+    font-size: 2rem;
+    margin: 20px 0;
   }
 </style>
 </head>
 <body>
 
-<h1>Click the Button!</h1>
-<button id="clickBtn">Click me</button>
-<p>Clicks: <span id="count">0</span></p>
-<canvas id="confetti"></canvas>
+<h1>10-Second Click Battle!</h1>
+<div id="timer">Time: 10s</div>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<div>
+  <button id="player1" class="btn">Player 1</button>
+  <div class="count" id="count1">0</div>
+</div>
+
+<div>
+  <button id="player2" class="btn">Player 2</button>
+  <div class="count" id="count2">0</div>
+</div>
 
 <script>
-  // ==== FIREBASE CONFIG ==== //
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT.firebaseio.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "SENDER_ID",
-    appId: "APP_ID"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-  const countRef = db.ref('clicks');
+let count1 = 0;
+let count2 = 0;
+let timeLeft = 10; // seconds
 
-  const button = document.getElementById('clickBtn');
-  const counter = document.getElementById('count');
+const btn1 = document.getElementById('player1');
+const btn2 = document.getElementById('player2');
+const counter1 = document.getElementById('count1');
+const counter2 = document.getElementById('count2');
+const timer = document.getElementById('timer');
 
-  // Load current clicks
-  countRef.on('value', (snapshot) => {
-    const data = snapshot.val();
-    counter.textContent = data || 0;
-  });
+btn1.addEventListener('click', () => {
+  count1++;
+  counter1.textContent = count1;
+  btn1.style.transform = "scale(1.5)";
+  setTimeout(() => btn1.style.transform="scale(1)",150);
+});
 
-  // ==== CONFETTI SETUP ==== //
-  const canvas = document.getElementById('confetti');
-  const ctx = canvas.getContext('2d');
-  let confettiParticles = [];
+btn2.addEventListener('click', () => {
+  count2++;
+  counter2.textContent = count2;
+  btn2.style.transform = "scale(1.5)";
+  setTimeout(() => btn2.style.transform="scale(1)",150);
+});
 
-  function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+// Countdown timer
+const interval = setInterval(() => {
+  timeLeft--;
+  timer.textContent = `Time: ${timeLeft}s`;
+  if(timeLeft <= 0){
+    clearInterval(interval);
+    endGame();
   }
-  window.addEventListener('resize', resizeCanvas);
-  resizeCanvas();
+}, 1000);
 
-  function createConfetti(x, y) {
-    for (let i = 0; i < 30; i++) {
-      confettiParticles.push({
-        x: x,
-        y: y,
-        vx: (Math.random() - 0.5) * 6,
-        vy: Math.random() * -8 - 2,
-        color: `hsl(${Math.random()*360},100%,50%)`,
-        size: Math.random() * 6 + 4,
-        life: 100
-      });
+// End game and show loser
+function endGame() {
+  btn1.disabled = true;
+  btn2.disabled = true;
+  
+  let loser = '';
+  if(count1 === count2){
+    loser = 'Both lost! Mother Fucker!';
+  } else if(count1 < count2){
+    loser = 'Player 1 lost! Mother Fucker!';
+  } else {
+    loser = 'Player 2 lost! Mother Fucker!';
+  }
+
+  // Flashing animation popup
+  const popup = document.createElement('div');
+  popup.textContent = loser;
+  popup.style.position = 'fixed';
+  popup.style.top = '50%';
+  popup.style.left = '50%';
+  popup.style.transform = 'translate(-50%, -50%)';
+  popup.style.fontSize = '3rem';
+  popup.style.background = '#ff416c';
+  popup.style.padding = '20px';
+  popup.style.borderRadius = '20px';
+  popup.style.color = '#fff';
+  popup.style.zIndex = '1000';
+  popup.style.animation = 'flash 1s infinite';
+  document.body.appendChild(popup);
+
+  // Flash animation
+  const style = document.createElement('style');
+  style.innerHTML = `
+    @keyframes flash {
+      0%, 50%, 100% { opacity: 1; }
+      25%, 75% { opacity: 0; }
     }
-  }
-
-  function updateConfetti() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    confettiParticles.forEach((p, i) => {
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vy += 0.2; // gravity
-      p.life--;
-      ctx.fillStyle = p.color;
-      ctx.fillRect(p.x, p.y, p.size, p.size);
-      if (p.life <= 0 || p.y > canvas.height) confettiParticles.splice(i, 1);
-    });
-    requestAnimationFrame(updateConfetti);
-  }
-  updateConfetti();
-
-  // ==== BUTTON CLICK ==== //
-  button.addEventListener('click', () => {
-    // Firebase click
-    countRef.transaction(current => (current || 0) + 1);
-    // Animate button
-    button.style.transform = "scale(1.5)";
-    setTimeout(() => button.style.transform = "scale(1)", 150);
-    // Trigger confetti
-    const rect = button.getBoundingClientRect();
-    createConfetti(rect.left + rect.width/2, rect.top + rect.height/2);
-  });
+  `;
+  document.head.appendChild(style);
+}
 </script>
 
 </body>
