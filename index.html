@@ -3,178 +3,126 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Click Battle 10s</title>
+<title>Click Dare Game</title>
 <style>
   body {
-    margin: 0;
     font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-    color: #fff;
+    text-align: center;
+    background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+    height: 100vh;
+    margin: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
-    height: 100vh;
-    overflow: hidden;
-    text-align: center;
+    transition: background 0.5s;
   }
   h1 {
-    font-size: 2.5rem;
+    margin-bottom: 10px;
+  }
+  .dare-inputs {
     margin-bottom: 20px;
-    animation: fadeIn 1.5s ease forwards;
   }
-  .btn {
-    padding: 1rem 2rem;
-    font-size: 1.5rem;
-    margin: 10px;
-    border: none;
-    border-radius: 12px;
+  input {
+    margin: 5px;
+    padding: 10px;
+  }
+  button {
+    padding: 10px 20px;
+    font-size: 18px;
     cursor: pointer;
-    background: #ff416c;
-    color: #fff;
-    transition: transform 0.2s, box-shadow 0.2s;
-    position: relative;
-    z-index: 1;
+    margin: 10px;
   }
-  .btn:hover {
-    transform: scale(1.2);
-    box-shadow: 0 0 20px #ff416c;
-  }
-  .count {
-    font-size: 2rem;
-    margin-top: 10px;
-    animation: pulse 1s infinite;
-  }
-  #timer {
-    font-size: 2rem;
-    margin: 20px 0;
-  }
-
-  /* Popup styles */
-  .popup {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 20px;
-    border-radius: 20px;
-    z-index: 1000;
-    text-align: center;
-    animation: popupAnim 2s infinite alternate;
-  }
-  .popup h2 {
-    font-size: 3rem;
-    margin: 0;
-    padding: 0;
-  }
-  .popup img {
-    width: 150px;
-    margin-top: 15px;
-    border-radius: 15px;
-    animation: bounce 1s infinite alternate;
-  }
-
-  @keyframes pulse {
-    0% { transform: scale(1); color: #fff; }
-    50% { transform: scale(1.3); color: #ff416c; }
-    100% { transform: scale(1); color: #fff; }
-  }
-  @keyframes fadeIn {
-    0% { opacity: 0; transform: translateY(-20px);}
-    100% { opacity: 1; transform: translateY(0);}
-  }
-  @keyframes popupAnim {
-    0% { background: #ff416c; color: #fff; }
-    25% { background: #ffb347; color: #000; }
-    50% { background: #00c6ff; color: #000; }
-    75% { background: #f7971e; color: #000; }
-    100% { background: #ff416c; color: #fff; }
-  }
-  @keyframes bounce {
-    0% { transform: translateY(0); }
-    50% { transform: translateY(-20px); }
-    100% { transform: translateY(0); }
+  #result {
+    margin-top: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    display: none;
   }
 </style>
 </head>
 <body>
 
-<h1>10-Second Click Battle!</h1>
+<h1>Click Dare Game</h1>
+
+<div class="dare-inputs">
+  <input type="text" id="p1Dare" placeholder="Player 1 dare">
+  <input type="text" id="p2Dare" placeholder="Player 2 dare">
+  <button onclick="startGame()">Start Game</button>
+</div>
+
+<div>
+  <button id="p1Btn" onclick="clicker(1)" disabled>P1 Click</button>
+  <button id="p2Btn" onclick="clicker(2)" disabled>P2 Click</button>
+</div>
+
 <div id="timer">Time: 10s</div>
-
-<div>
-  <button id="player1" class="btn">Player 1</button>
-  <div class="count" id="count1">0</div>
-</div>
-
-<div>
-  <button id="player2" class="btn">Player 2</button>
-  <div class="count" id="count2">0</div>
-</div>
+<div id="result"></div>
 
 <script>
-let count1 = 0;
-let count2 = 0;
-let timeLeft = 10; // seconds
+let p1Score = 0;
+let p2Score = 0;
+let time = 10;
+let gameInterval;
+let countdown;
 
-const btn1 = document.getElementById('player1');
-const btn2 = document.getElementById('player2');
-const counter1 = document.getElementById('count1');
-const counter2 = document.getElementById('count2');
-const timer = document.getElementById('timer');
+function startGame() {
+  p1Score = 0;
+  p2Score = 0;
+  time = 10;
+  document.getElementById('timer').textContent = `Time: ${time}s`;
+  document.getElementById('result').style.display = 'none';
 
-btn1.addEventListener('click', () => {
-  count1++;
-  counter1.textContent = count1;
-  btn1.style.transform = "scale(1.5)";
-  setTimeout(() => btn1.style.transform="scale(1)",150);
-});
+  document.getElementById('p1Btn').disabled = false;
+  document.getElementById('p2Btn').disabled = false;
 
-btn2.addEventListener('click', () => {
-  count2++;
-  counter2.textContent = count2;
-  btn2.style.transform = "scale(1.5)";
-  setTimeout(() => btn2.style.transform="scale(1)",150);
-});
+  countdown = setInterval(() => {
+    time--;
+    document.getElementById('timer').textContent = `Time: ${time}s`;
+    if(time <= 0) {
+      endGame();
+    }
+  }, 1000);
+}
 
-// Countdown timer
-const interval = setInterval(() => {
-  timeLeft--;
-  timer.textContent = `Time: ${timeLeft}s`;
-  if(timeLeft <= 0){
-    clearInterval(interval);
-    endGame();
-  }
-}, 1000);
+function clicker(player) {
+  if(player === 1) p1Score++;
+  else p2Score++;
+}
 
-// End game and show colorful animated popup with image
 function endGame() {
-  btn1.disabled = true;
-  btn2.disabled = true;
-  
-  let loserText = '';
-  if(count1 === count2){
-    loserText = 'Both lost! Mother Fucker!';
-  } else if(count1 < count2){
-    loserText = 'Player 1 lost! Mother Fucker!';
+  clearInterval(countdown);
+  document.getElementById('p1Btn').disabled = true;
+  document.getElementById('p2Btn').disabled = true;
+
+  let p1Dare = document.getElementById('p1Dare').value || "No dare!";
+  let p2Dare = document.getElementById('p2Dare').value || "No dare!";
+
+  let resultText = '';
+  if(p1Score > p2Score) {
+    resultText = `P2 lost! You must do: "${p1Dare}"`;
+    document.body.style.background = "linear-gradient(135deg, #ff6a6a, #ffb347)";
+  } else if(p2Score > p1Score) {
+    resultText = `P1 lost! You must do: "${p2Dare}"`;
+    document.body.style.background = "linear-gradient(135deg, #6a5acd, #00ffff)";
   } else {
-    loserText = 'Player 2 lost! Mother Fucker!';
+    resultText = "It's a tie! No dares today!";
+    document.body.style.background = "linear-gradient(135deg, #f0f0f0, #cccccc)";
   }
 
-  const popup = document.createElement('div');
-  popup.classList.add('popup');
+  let resultDiv = document.getElementById('result');
+  resultDiv.textContent = resultText;
+  resultDiv.style.display = 'block';
 
-  const h2 = document.createElement('h2');
-  h2.textContent = loserText;
-  popup.appendChild(h2);
-
-  const img = document.createElement('img');
-  img.src = 'https://i.imgur.com/0Z8bO7F.png'; // sample image, replace with yours
-  popup.appendChild(img);
-
-  document.body.appendChild(popup);
+  // Fun animation effect
+  resultDiv.animate([
+    { transform: 'scale(0.5)', opacity: 0 },
+    { transform: 'scale(1.2)', opacity: 1 },
+    { transform: 'scale(1)', opacity: 1 }
+  ], {
+    duration: 800,
+    easing: 'ease-out'
+  });
 }
 </script>
-
 </body>
 </html>
