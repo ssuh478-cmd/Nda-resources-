@@ -1,125 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Click Dare Game</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Mobile Hand Particle Control</title>
+
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    background: linear-gradient(135deg, #ff9a9e, #fad0c4);
-    height: 100vh;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    transition: background 0.5s;
-  }
-  h1 { margin-bottom: 10px; }
-  input { margin: 5px; padding: 10px; font-size: 16px; }
-  button { padding: 10px 20px; font-size: 18px; cursor: pointer; margin: 10px; }
-  #scores { font-size: 20px; margin-top: 15px; display: none; }
-  #timer { font-size: 22px; margin-top: 10px; display: none; }
-  #result { margin-top: 20px; font-size: 24px; font-weight: bold; display: none; }
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: black;
+  touch-action: none;
+}
+video {
+  display: none;
+}
 </style>
 </head>
+
 <body>
+<video id="video" autoplay playsinline></video>
 
-<h1>Click Dare Game</h1>
+<!-- Three.js -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
 
-<div id="player1Input">
-  <input type="text" id="p1DareInput" placeholder="Player 1 dare">
-  <button onclick="saveP1Dare()">Hide & Next</button>
-</div>
-
-<div id="player2Input" style="display:none;">
-  <input type="text" id="p2DareInput" placeholder="Player 2 dare">
-  <button onclick="saveP2Dare()">Hide & Start Game</button>
-</div>
-
-<div>
-  <button id="p1Btn" onclick="clicker(1)" disabled>P1 Click</button>
-  <button id="p2Btn" onclick="clicker(2)" disabled>P2 Click</button>
-</div>
-
-<div id="scores">P1: 0 | P2: 0</div>
-<div id="timer">Time: 10s</div>
-<div id="result"></div>
+<!-- MediaPipe Hands -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 
 <script>
-let p1Score = 0, p2Score = 0, time = 10, countdown;
-let p1Dare = "", p2Dare = "";
+/* ================= MOBILE SAFE SETTINGS ================= */
+const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+const PARTICLE_COUNT = isMobile ? 900 : 2000;
 
-// Player 1 enters dare
-function saveP1Dare() {
-  p1Dare = document.getElementById('p1DareInput').value || "No dare!";
-  document.getElementById('player1Input').style.display = 'none';
-  document.getElementById('player2Input').style.display = 'block';
+/* ================= THREE SETUP ================= */
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(
+  70,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  100
+);
+camera.position.z = 6;
+
+const renderer = new THREE.WebGLRenderer({
+  antialias: true,
+  powerPreference: "low-power"
+});
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+document.body.appendChild(renderer.domElement);
+
+/* ================= PARTICLES ================= */
+const geometry = new THREE.BufferGeometry();
+const positions = new Float32Array(PARTICLE_COUNT * 3);
+
+for (let i = 0; i < positions.length; i += 3) {
+  positions[i] = (Math.random() - 0.5) * 5;
+  positions[i + 1] = (Math.random() - 0.5) * 5;
+  positions[i + 2] = (Math.random() - 0.5) * 5;
 }
 
-// Player 2 enters dare
-function saveP2Dare() {
-  p2Dare = document.getElementById('p2DareInput').value || "No dare!";
-  document.getElementById('player2Input').style.display = 'none';
-  startGame();
-}
+geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
 
-function startGame() {
-  // Show scores and timer
-  document.getElementById('scores').style.display = 'block';
-  document.getElementById('timer').style.display = 'block';
-  document.getElementById('scores').textContent = `P1: 0 | P2: 0`;
-  document.getElementById('timer').textContent = `Time: ${time}s`;
-  document.getElementById('result').style.display = 'none';
+const material = new THREE.PointsMaterial({
+  size: isMobile ? 0.07 : 0.05,
+  color: 0x00ffff
+});
 
-  // Enable buttons for multitap
-  document.getElementById('p1Btn').disabled = false;
-  document.getElementById('p2Btn').disabled = false;
+const points = new THREE.Points(geometry, material);
+scene.add(points);
 
-  // Countdown timer
-  countdown = setInterval(() => {
-    time--;
-    document.getElementById('timer').textContent = `Time: ${time}s`;
-    if(time <= 0) endGame();
-  }, 1000);
-}
+/* ================= HAND TRACKING ================= */
+const video = document.getElementById("video");
 
-// Multitap clicker function
-function clicker(player) {
-  if(player === 1) p1Score++;
-  else p2Score++;
-  document.getElementById('scores').textContent = `P1: ${p1Score} | P2: ${p2Score}`;
-}
+const hands = new Hands({
+  locateFile: file =>
+    `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+});
 
-function endGame() {
-  clearInterval(countdown);
-  document.getElementById('p1Btn').disabled = true;
-  document.getElementById('p2Btn').disabled = true;
+hands.setOptions({
+  maxNumHands: 1,
+  modelComplexity: 0,
+  minDetectionConfidence: 0.6,
+  minTrackingConfidence: 0.6
+});
 
-  let resultText = '';
-  if(p1Score > p2Score) {
-    resultText = `P2 lost! You must do: "${p1Dare}"`;
-    document.body.style.background = "linear-gradient(135deg, #ff6a6a, #ffb347)";
-  } else if(p2Score > p1Score) {
-    resultText = `P1 lost! You must do: "${p2Dare}"`;
-    document.body.style.background = "linear-gradient(135deg, #6a5acd, #00ffff)";
-  } else {
-    resultText = "It's a tie! No dares today!";
-    document.body.style.background = "linear-gradient(135deg, #f0f0f0, #cccccc)";
+hands.onResults(onResults);
+
+const cam = new Camera(video, {
+  onFrame: async () => {
+    await hands.send({ image: video });
+  },
+  width: 480,
+  height: 360
+});
+cam.start();
+
+/* ================= INTERACTION ================= */
+function onResults(results) {
+  if (!results.multiHandLandmarks.length) return;
+
+  const hand = results.multiHandLandmarks[0];
+  const finger = hand[8];
+  const thumb = hand[4];
+
+  const fx = (finger.x - 0.5) * 6;
+  const fy = -(finger.y - 0.5) * 6;
+
+  const pos = geometry.attributes.position.array;
+
+  for (let i = 0; i < pos.length; i += 3) {
+    const dx = pos[i] - fx;
+    const dy = pos[i + 1] - fy;
+    const d = Math.sqrt(dx * dx + dy * dy);
+
+    if (d < 1.2) {
+      pos[i] += dx * 0.04;
+      pos[i + 1] += dy * 0.04;
+    }
   }
 
-  const resultDiv = document.getElementById('result');
-  resultDiv.textContent = resultText;
-  resultDiv.style.display = 'block';
+  geometry.attributes.position.needsUpdate = true;
 
-  resultDiv.animate([
-    { transform: 'scale(0.5)', opacity: 0 },
-    { transform: 'scale(1.2)', opacity: 1 },
-    { transform: 'scale(1)', opacity: 1 }
-  ], { duration: 800, easing: 'ease-out' });
-}
-</script>
-
-</body>
-</html>
+  // Pinch = color change
+  if (Mat
