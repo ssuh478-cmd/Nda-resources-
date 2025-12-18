@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Mobile Hand Particles</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<title>Mobile Particle Test</title>
 
 <style>
 html, body {
   margin: 0;
   padding: 0;
-  overflow: hidden;
   background: black;
+  overflow: hidden;
 }
-#startBtn {
+#start {
   position: fixed;
   inset: 0;
   display: flex;
@@ -29,7 +29,7 @@ video { display: none; }
 
 <body>
 
-<div id="startBtn">TAP TO START</div>
+<div id="start">TAP TO START</div>
 <video id="video" playsinline></video>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
@@ -37,19 +37,19 @@ video { display: none; }
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 
 <script>
-const startBtn = document.getElementById("startBtn");
+const start = document.getElementById("start");
 const video = document.getElementById("video");
 
-let scene, camera, renderer, particles, geometry;
+let scene, camera, renderer, points, geometry;
 
-startBtn.addEventListener("click", () => {
-  startBtn.remove();
+start.addEventListener("click", () => {
+  start.remove();
   initThree();
-  initHands();
-  animate();
+  animate();        // 🔥 render FIRST
+  initHands();      // camera AFTER
 });
 
-/* ===== THREE ===== */
+/* ===== THREE (GUARANTEED VISUAL) ===== */
 function initThree() {
   scene = new THREE.Scene();
 
@@ -57,9 +57,9 @@ function initThree() {
     70,
     window.innerWidth / window.innerHeight,
     0.1,
-    50
+    20
   );
-  camera.position.z = 5;
+  camera.position.z = 4;
 
   renderer = new THREE.WebGLRenderer({ antialias: false });
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -67,25 +67,9 @@ function initThree() {
   document.body.appendChild(renderer.domElement);
 
   geometry = new THREE.BufferGeometry();
-  const count = 600;
-  const pos = new Float32Array(count * 3);
+  const count = 500;
+  const arr = new Float32Array(count * 3);
 
-  for (let i = 0; i < pos.length; i += 3) {
-    pos[i] = (Math.random() - 0.5) * 4;
-    pos[i+1] = (Math.random() - 0.5) * 4;
-    pos[i+2] = (Math.random() - 0.5) * 4;
-  }
-
-  geometry.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-
-  particles = new THREE.Points(
-    geometry,
-    new THREE.PointsMaterial({ color: 0x00ffff, size: 0.08 })
-  );
-
-  scene.add(particles);
-}
-
-/* ===== HANDS ===== */
-function initHands() {
-  const h
+  for (let i = 0; i < arr.length; i += 3) {
+    arr[i] = (Math.random() - 0.5) * 3;
+    arr[i+1] = (Math.random() - 0.5) * 3;
